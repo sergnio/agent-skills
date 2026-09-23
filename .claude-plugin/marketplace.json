@@ -1,0 +1,17 @@
+{
+  "name": "gh-attach-fit",
+  "owner": {
+    "name": "Sergio Najera",
+    "url": "https://github.com/sergnio"
+  },
+  "metadata": {
+    "description": "Attach images and recordings to GitHub PRs and issues, auto-fitted to the 10 MB limit."
+  },
+  "plugins": [
+    {
+      "name": "gh-attach-fit",
+      "source": "./",
+      "description": "Attach screenshots, GIFs, and screen recordings to GitHub PRs and issues, automatically shrinking anything over the 10 MB upload limit."
+    }
+  ]
+}
