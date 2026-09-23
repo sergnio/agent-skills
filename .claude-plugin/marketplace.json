@@ -1,5 +1,5 @@
 {
-  "name": "gh-attach-fit",
+  "name": "upload-image-to-github",
   "owner": {
     "name": "Sergio Najera",
     "url": "https://github.com/sergnio"
@@ -9,7 +9,7 @@
   },
   "plugins": [
     {
-      "name": "gh-attach-fit",
+      "name": "upload-image-to-github",
       "source": "./",
       "description": "Attach screenshots, GIFs, and screen recordings to GitHub PRs and issues, automatically shrinking anything over the 10 MB upload limit."
     }

@@ -1,13 +1,13 @@
 {
-  "name": "gh-attach-fit",
+  "name": "upload-image-to-github",
   "version": "0.1.0",
   "description": "Attach screenshots, GIFs, and screen recordings to GitHub PRs and issues, automatically shrinking anything over the 10 MB upload limit.",
   "author": {
     "name": "Sergio Najera",
     "url": "https://github.com/sergnio"
   },
-  "homepage": "https://github.com/sergnio/gh-attach-fit",
-  "repository": "https://github.com/sergnio/gh-attach-fit",
+  "homepage": "https://github.com/sergnio/upload-image-to-github",
+  "repository": "https://github.com/sergnio/upload-image-to-github",
   "license": "MIT",
   "keywords": ["github", "gh", "attachments", "screenshots", "gif", "pull-request"]
 }

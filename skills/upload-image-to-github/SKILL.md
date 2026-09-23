@@ -1,5 +1,5 @@
 ---
-name: gh-attach-fit
+name: upload-image-to-github
 description: Attach screenshots, GIFs, and screen recordings to GitHub pull requests, issues, and comments, automatically shrinking any file over GitHub's 10 MB attachment limit first. Use when adding images or videos to a PR or issue body or comment, when a GIF or recording is too large to upload, or when gh --attach fails with a size error.
 ---
 
@@ -13,8 +13,9 @@ them.
 
 ## Workflow
 
-1. Confirm `gh --version` is 2.99.0 or newer. If not, stop and ask the user to
-   upgrade (`brew upgrade gh`); older versions have no `--attach`.
+1. Run `scripts/check-gh.sh`. It verifies gh is installed, 2.99.0+, and
+   authenticated. If it fails, relay its message and stop. Do not work around
+   an old gh by calling GitHub's upload API directly.
 2. Locate each file and verify it is the one the user means.
 3. Fit every file in one call. It prints one path per input, in order, and
    prints files that already fit unchanged:
@@ -71,7 +72,8 @@ If a video still does not fit, trim it and retry.
 
 ## Requirements
 
-- Authenticated `gh` 2.99.0+ (`gh auth status`), with access to the target repo.
+- Authenticated `gh` 2.99.0+ with access to the target repo. `scripts/check-gh.sh`
+  verifies this and prints the fix when it is not met.
 - `ffmpeg` for any file that needs fitting, plus `gifsicle` for GIFs
   (`brew install ffmpeg gifsicle`). Files that already fit need neither.
 - SVGs and WebP files cannot be shrunk, but `gh` still attaches them when they

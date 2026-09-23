@@ -1,4 +1,4 @@
-# gh-attach-fit
+# upload-image-to-github
 
 An agent skill that attaches screenshots, GIFs, and screen recordings to GitHub
 pull requests, issues, and comments, and automatically shrinks anything over
@@ -38,19 +38,20 @@ Files already under the limit are passed through untouched.
 Claude Code:
 
 ```text
-/plugin marketplace add sergnio/gh-attach-fit
-/plugin install gh-attach-fit@gh-attach-fit
+/plugin marketplace add sergnio/upload-image-to-github
+/plugin install upload-image-to-github@upload-image-to-github
 ```
 
 Codex, Cursor, Gemini CLI, OpenCode, and other agents:
 
 ```bash
-npx skills add sergnio/gh-attach-fit
+npx skills add sergnio/upload-image-to-github
 ```
 
 ## Requirements
 
-- [GitHub CLI](https://cli.github.com) 2.99.0 or newer, authenticated
+- [GitHub CLI](https://cli.github.com) 2.99.0 or newer, authenticated. Older versions have no
+  `--attach`; `scripts/check-gh.sh` detects this and says how to upgrade
 - `ffmpeg` and `gifsicle` for files that need shrinking: `brew install ffmpeg gifsicle`
 
 ## Using the script directly
@@ -58,7 +59,7 @@ npx skills add sergnio/gh-attach-fit
 The script is standalone and works without an agent:
 
 ```bash
-fitted=$(skills/gh-attach-fit/scripts/fit-attachment.sh ./demo.gif)
+fitted=$(skills/upload-image-to-github/scripts/fit-attachment.sh ./demo.gif)
 gh pr comment 123 --attach "$fitted#Demo of the new flow"
 ```
 
