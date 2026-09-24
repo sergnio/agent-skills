@@ -1,0 +1,16 @@
+{
+  "name": "sergnio-skills",
+  "version": "0.2.0",
+  "description": "Sergio Najera's agent skills, starting with attaching screenshots, GIFs, and screen recordings to GitHub PRs and issues.",
+  "author": {
+    "name": "Sergio Najera",
+    "url": "https://github.com/sergnio"
+  },
+  "homepage": "https://github.com/sergnio/agent-skills",
+  "repository": "https://github.com/sergnio/agent-skills",
+  "license": "MIT",
+  "keywords": ["github", "gh", "attachments", "screenshots", "gif", "pull-request"],
+  "skills": [
+    "./skills/engineering/upload-image-to-github"
+  ]
+}

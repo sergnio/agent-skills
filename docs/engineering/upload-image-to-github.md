@@ -39,7 +39,7 @@ Claude Code:
 
 ```text
 /plugin marketplace add sergnio/agent-skills
-/plugin install upload-image-to-github@sergnio
+/plugin install sergnio-skills@sergnio
 ```
 
 Codex, Cursor, Gemini CLI, OpenCode, and other agents:
@@ -59,7 +59,7 @@ npx skills add sergnio/agent-skills --skill upload-image-to-github
 The script is standalone and works without an agent:
 
 ```bash
-fitted=$(plugins/upload-image-to-github/skills/upload-image-to-github/scripts/fit-attachment.sh ./demo.gif)
+fitted=$(skills/engineering/upload-image-to-github/scripts/fit-attachment.sh ./demo.gif)
 gh pr comment 123 --attach "$fitted#Demo of the new flow"
 ```
 

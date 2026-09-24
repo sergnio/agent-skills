@@ -5,13 +5,13 @@
     "url": "https://github.com/sergnio"
   },
   "metadata": {
-    "description": "Agent skills and Claude Code plugins by Sergio Najera."
+    "description": "Agent skills by Sergio Najera."
   },
   "plugins": [
     {
-      "name": "upload-image-to-github",
-      "source": "./plugins/upload-image-to-github",
-      "description": "Attach screenshots, GIFs, and screen recordings to GitHub PRs and issues, automatically shrinking anything over the 10 MB upload limit."
+      "name": "sergnio-skills",
+      "source": "./",
+      "description": "Sergio Najera's agent skills, starting with attaching screenshots, GIFs, and screen recordings to GitHub PRs and issues."
     }
   ]
 }
