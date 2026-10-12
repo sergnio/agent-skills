@@ -11,7 +11,9 @@ and then in slow motion, so a 200ms flash nobody can see live becomes obvious.
   (and optionally a GIF), and makes a contact sheet so the agent can check the frames before
   showing you.
 - `ax-caption.mjs` overlays what Chrome's accessibility tree reports (role, name, states like
-  `required` or `expanded`) as a caption, so invisible a11y fixes show up on video.
+  `required` or `expanded`) as a caption, so invisible a11y fixes show up on video. Each caption
+  stays on screen for 1.5 s during the recording, and its full data is saved as `ax-steps.json`
+  (and `<video>-ax.json` after composing) so a PR can link to the raw values.
 
 Labels are rendered by the browser, so it works with ffmpeg builds that don't include `drawtext`.
 

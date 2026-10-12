@@ -2,6 +2,7 @@
 import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { startAxStepLog } from './ax-caption.mjs';
 import { fail, loadPlaywright, parseArgs } from './lib.mjs';
 
 const HELP = `Usage: record.mjs --url URL --scenario FILE.mjs --out DIR [options]
@@ -21,7 +22,8 @@ Options:
   --force            Replace DIR if it already exists
 
 Writes DIR/frames/*.png, DIR/frames.txt (ffmpeg concat manifest with real frame
-durations) and DIR/meta.json (frame count, duration, marks).`;
+durations) and DIR/meta.json (frame count, duration, marks). If the scenario
+calls axCaption(), also writes DIR/ax-steps.json with each step's full data.`;
 
 const S = 'record';
 const args = parseArgs(S, process.argv.slice(2), { flags: ['mobile', 'headed', 'force'] });
@@ -71,6 +73,7 @@ try {
   });
   await page.goto(args.url, { waitUntil: 'networkidle' });
   await page.evaluate(() => document.fonts.ready);
+  const axStepLog = startAxStepLog(page);
   if (scenario.prepare) await scenario.prepare({ page });
 
   const cdp = await page.context().newCDPSession(page);
@@ -87,6 +90,7 @@ try {
   };
 
   await cdp.send('Page.startScreencast', { format: 'png', everyNthFrame: 1 });
+  axStepLog.recording = true;
   await page.waitForTimeout(Number(args['lead-ms'] ?? 500));
   await scenario.run({ page, mark });
   await holdFinalState(page, Number(args['linger-ms'] ?? 1500));
@@ -95,6 +99,7 @@ try {
 
   if (frames.length < 2) fail(S, `captured only ${frames.length} frame(s)`);
   const t0 = frames[0].t;
+  const secondsIntoRecording = (t) => Number(Math.max(0, t - t0).toFixed(3));
   const tail = 1 / 30;
   const manifest = frames
     .map((f, i) => `file '${f.file}'\nduration ${((frames[i + 1]?.t ?? f.t + tail) - f.t).toFixed(6)}`)
@@ -108,8 +113,13 @@ try {
     durationSeconds: Number((frames.at(-1).t - t0 + tail).toFixed(3)),
     averageFps: Number(((frames.length - 1) / (frames.at(-1).t - t0)).toFixed(1)),
     marks: Object.fromEntries(Object.entries(marks).map(([k, t]) => [k, Number((t - t0).toFixed(3))])),
+    axSteps: axStepLog.steps.length,
   };
   writeFileSync(join(outDir, 'meta.json'), `${JSON.stringify(meta, null, 2)}\n`);
+  if (axStepLog.steps.length) {
+    const axSteps = axStepLog.steps.map(({ step, shownAt, rows }) => ({ step, seconds: secondsIntoRecording(shownAt), rows }));
+    writeFileSync(join(outDir, 'ax-steps.json'), `${JSON.stringify(axSteps, null, 2)}\n`);
+  }
   console.log(JSON.stringify(meta, null, 2));
 } finally {
   await browser.close();

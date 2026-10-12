@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { extname, join, resolve } from 'node:path';
 import { fail, loadPlaywright, parseArgs, run } from './lib.mjs';
@@ -8,7 +8,8 @@ const HELP = `Usage: compose.mjs --clip DIR=LABEL [--clip DIR=LABEL ...] --out F
 
 Turns record.mjs captures into one labeled review video: clips side by side,
 played in real time, then again in slow motion. Also writes a contact sheet
-(FILE-sheet.png) to eyeball the result, and optionally a GIF.
+(FILE-sheet.png) to eyeball the result, and optionally a GIF. If any clip has
+ax-steps.json from axCaption(), writes FILE-ax.json with step times in the video.
 
 Options:
   --crop W:H:X:Y    Crop every clip, in frame pixels (CSS px x dpr)
@@ -34,7 +35,8 @@ if (!args.out || extname(args.out) !== '.mp4') fail(S, '--out must be an .mp4 pa
 const out = resolve(args.out);
 const gifOut = out.replace(/\.mp4$/, '.gif');
 const sheetOut = out.replace(/\.mp4$/, '-sheet.png');
-for (const file of [out, sheetOut, ...(args.gif ? [gifOut] : [])]) {
+const axOut = out.replace(/\.mp4$/, '-ax.json');
+for (const file of [out, sheetOut, axOut, ...(args.gif ? [gifOut] : [])]) {
   if (existsSync(file) && !args.force) fail(S, `${file} exists; pass --force to overwrite`);
 }
 const fps = Number(args.fps ?? 60);
@@ -46,7 +48,14 @@ const clips = args.clip.map((spec) => {
   const dir = resolve(spec.slice(0, split));
   const manifest = join(dir, 'frames.txt');
   if (!existsSync(manifest)) fail(S, `no frames.txt in ${dir}; run record.mjs first`);
-  return { dir, manifest, label: spec.slice(split + 1), meta: JSON.parse(readFileSync(join(dir, 'meta.json'), 'utf8')) };
+  const axSteps = join(dir, 'ax-steps.json');
+  return {
+    dir,
+    manifest,
+    label: spec.slice(split + 1),
+    meta: JSON.parse(readFileSync(join(dir, 'meta.json'), 'utf8')),
+    axSteps: existsSync(axSteps) ? JSON.parse(readFileSync(axSteps, 'utf8')) : [],
+  };
 });
 const viewports = new Set(clips.map(({ meta: { viewport: v } }) => `${v.width}x${v.height}@${v.dpr}`));
 if (viewports.size > 1) fail(S, `clips must share one viewport, got ${[...viewports].join(', ')}`);
@@ -116,6 +125,21 @@ try {
   rmSync(labelDir, { recursive: true, force: true });
 }
 
+const hasAxSteps = clips.some((clip) => clip.axSteps.length);
+if (hasAxSteps) {
+  const toVideoSeconds = (clip, seconds) => Math.max(0, seconds - clip.trim);
+  const axClips = clips.map((clip) => ({
+    label: clip.label,
+    steps: clip.axSteps.map(({ step, seconds, rows }) => ({
+      step,
+      seconds: Number(toVideoSeconds(clip, seconds).toFixed(3)),
+      ...(slow > 1 ? { slowMotionSeconds: Number((longest + toVideoSeconds(clip, seconds) * slow).toFixed(3)) } : {}),
+      rows,
+    })),
+  }));
+  writeFileSync(axOut, `${JSON.stringify({ video: out, clips: axClips }, null, 2)}\n`);
+}
+
 const probe = JSON.parse(
   run(S, 'ffprobe', ['-v', 'error', '-count_frames', '-select_streams', 'v:0', '-show_entries', 'stream=width,height,nb_read_frames:format=duration,size', '-of', 'json', out])
 );
@@ -144,6 +168,7 @@ console.log(
       video: out,
       gif: args.gif ? gifOut : undefined,
       contactSheet: sheetOut,
+      axSteps: hasAxSteps ? axOut : undefined,
       width,
       height,
       durationSeconds: Number(Number(probe.format.duration).toFixed(2)),

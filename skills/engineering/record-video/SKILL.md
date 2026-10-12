@@ -87,17 +87,25 @@ export async function prepare({ page }) {
 
 export async function run({ page, mark }) {
   await page.getByTestId('navHamburger').tap();
-  await page.waitForTimeout(1200);
-  await axCaption(page, '1. Opened menu'); // In dialog dialog: "Navigation Menu"
+  await page.getByRole('dialog').waitFor();
   mark('open');
+  await axCaption(page, '1. Opened menu'); // In dialog dialog: "Navigation Menu"
 }
 ```
 
 - With no third argument it shows the focused element and the dialog that contains it.
 - Pass `[{ label: 'Full name', target: page.locator('#fullName') }]` to show specific
   elements and states like `required=true` or `expanded=false`.
-- Wait for transitions to settle before each caption, and leave about 1.5 s per step so it can
-  be read.
+- Wait for the UI to settle before each caption, since it reads the tree at that moment.
+- In `run()`, each caption holds for 1.5 s so it can be read, so don't add your own
+  `waitForTimeout`. Change it with a fourth argument: `axCaption(page, step, undefined, { holdMs: 800 })`.
+  Captions in `prepare()` don't hold, since that part isn't recorded.
+- Call `mark()` before `axCaption()`, or the mark lands after the hold.
+- `record.mjs` writes every caption to `ax-steps.json` in its `--out` dir: the step, `seconds`
+  into the recording, and the full untruncated role, name, description, value, and states.
+  `compose.mjs` copies all clips' steps next to the video as `<video>-ax.json`, with times
+  shifted for `--align` and a `slowMotionSeconds` for the replay. Link or attach that file in the
+  PR as the raw data behind the captions.
 - The caption is `aria-hidden`, so it doesn't change what it measures. Label it as the
   accessibility tree in the PR, not as real VoiceOver output.
 

@@ -1,6 +1,14 @@
 const sessions = new WeakMap();
 const STATES = ['required', 'invalid', 'expanded', 'checked', 'selected', 'disabled', 'modal', 'hasPopup'];
 const SHOWN_ONLY_WHEN_SET = ['invalid', 'disabled', 'modal'];
+const DEFAULT_HOLD_MS = 1500;
+const STEP_LOG = Symbol.for('record-video.axStepLog');
+
+/** Lets record.mjs collect captions for ax-steps.json. A global symbol survives a second copy of this module. */
+export function startAxStepLog(page) {
+  page[STEP_LOG] = { recording: false, steps: [] };
+  return page[STEP_LOG];
+}
 
 /** Returns one CDP session per page, created on first use. */
 async function cdpFor(page) {
@@ -58,18 +66,22 @@ export function describeAx(ax) {
 }
 
 /**
- * Overlays a caption bar showing real accessibility-tree data for the current step.
- * Defaults to the focused element and the dialog that contains it.
+ * Overlays a caption bar of real accessibility-tree data, by default for the focused element and its dialog.
+ * During run() it then waits `holdMs` so the caption can be read; prepare() is off camera, so it doesn't wait.
  */
-export async function axCaption(page, step, targets) {
+export async function axCaption(page, step, targets, { holdMs = DEFAULT_HOLD_MS } = {}) {
   const rows = targets ?? [
     { label: 'Focused', target: 'document.activeElement' },
     { label: 'In dialog', target: `document.activeElement?.closest('[role=dialog],[role=alertdialog],dialog') ?? null` },
   ];
   const lines = [];
+  const shownRows = [];
   for (const { label, target } of rows) {
     const ax = await readAx(page, target);
-    if (ax || !label.startsWith('In ')) lines.push(`${label} ${describeAx(ax)}`);
+    if (ax || !label.startsWith('In ')) {
+      lines.push(`${label} ${describeAx(ax)}`);
+      shownRows.push({ label, inAccessibilityTree: Boolean(ax), ...ax });
+    }
   }
   await page.evaluate(
     ({ step, lines }) => {
@@ -92,5 +104,8 @@ export async function axCaption(page, step, targets) {
     { step, lines }
   );
   console.error(`[${step}] ${lines.join(' | ')}`);
+  const log = page[STEP_LOG];
+  log?.steps.push({ step, shownAt: Date.now() / 1000, rows: shownRows });
+  if (log?.recording && holdMs > 0) await page.waitForTimeout(holdMs);
   return lines;
 }
