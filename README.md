@@ -8,6 +8,7 @@ My agent skills, installable as one Claude Code plugin or one skill at a time.
 
 - **[upload-image-to-github](docs/engineering/upload-image-to-github.md)**: Attach screenshots, GIFs, and screen recordings to GitHub PRs and issues, automatically shrinking anything over the 10 MB upload limit.
 - **[record-video](docs/engineering/record-video.md)**: Record real browser video of a UI interaction, with side-by-side before/after comparisons and a slow-motion replay.
+- **[browser-proof](docs/engineering/browser-proof.md)**: Prove what a web page sent, received, or logged with raw, timestamped console and network receipts.
 
 ## Install
 
